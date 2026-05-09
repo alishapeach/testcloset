@@ -360,13 +360,15 @@ input::placeholder { color: var(--text-quiet); }
 .grid-area {
   flex: 1;
   overflow-y: auto;
-  padding: 16px 18px;
+  padding: 16px 18px 24px;
+  min-height: 0;
 }
 
 .image-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 12px;
+  align-items: start;
 }
 
 @media (max-width: 1100px) { .image-grid { grid-template-columns: repeat(4, 1fr); } }
@@ -378,8 +380,9 @@ input::placeholder { color: var(--text-quiet); }
   overflow: hidden;
   cursor: pointer;
   background: var(--bg-input);
-  aspect-ratio: 3/4;
+  aspect-ratio: 2/3;
   transition: transform 0.15s, box-shadow 0.15s;
+  width: 100%;
 }
 .tile:hover { transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
 .tile.selected {
@@ -390,6 +393,7 @@ input::placeholder { color: var(--text-quiet); }
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: top;
   display: block;
   transition: opacity 0.25s;
 }
@@ -880,12 +884,17 @@ let settings       = { chatro_code: "", underground_code: "", available_tags: []
 let tagPickerSel   = new Set();  // selected tags in picker
 
 // ── Init ──────────────────────────────────────────────────────
-// Wire up events immediately — do NOT wait for async loadSettings
-document.getElementById("door-enter").addEventListener("click", enterGallery);
-document.addEventListener("keydown", e => { if (e.key === "Escape") handleEsc(); });
-document.getElementById("file-input").addEventListener("change", onFilesChosen);
-// Load settings in the background
-loadSettings().catch(e => console.error("Settings load failed:", e));
+function init() {
+  document.getElementById("door-enter").addEventListener("click", enterGallery);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") handleEsc(); });
+  document.getElementById("file-input").addEventListener("change", onFilesChosen);
+  loadSettings().catch(e => console.error("Settings load failed:", e));
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", init);
+} else {
+  init();
+}
 
 // ── Settings ──────────────────────────────────────────────────
 async function loadSettings() {

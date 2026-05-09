@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holly's Closet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Design tokens ─────────────────────────────────────────── */
+:root {
+  --bg-page:        #000000;
+  --bg-card:        #0e0e10;
+  --bg-card-soft:   #0a0a0c;
+  --bg-input:       #1a1a1d;
+  --bg-input-hover: #1f1f23;
+  --border-subtle:  #232327;
+  --border-strong:  #2e2e34;
+  --text-primary:   #f4f4f5;
+  --text-secondary: #c4c4cc;
+  --text-tertiary:  #8b8b94;
+  --text-quiet:     #6b6b73;
+  --accent:         #8b7df0;
+  --accent-hover:   #9d91f2;
+  --accent-on:      #0e0e10;
+  --accent-soft:    #2a2440;
+  --accent-soft-fg: #b5a8ff;
+  --door-top:       #4a2d8e;
+  --door-bottom:    #6b3fb8;
+  --door-crest-bg:  #1f1538;
+  --door-crest-fg:  #e9d8ff;
+  --door-handle:    #9c7fc7;
+  --pill-hover:     #2a1f4a;
+  --danger:         #d97070;
+  --danger-hover:   #b85a5a;
+  --radius-sm:      6px;
+  --radius-md:      8px;
+  --radius-lg:      14px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+/* ── Utility ───────────────────────────────────────────────── */
+.serif { font-family: 'Playfair Display', Georgia, serif; }
+.hidden { display: none !important; }
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+input, textarea {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 12px;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+input:focus, textarea:focus { border-color: var(--accent); }
+input::placeholder { color: var(--text-quiet); }
+
+/* ──────────────────────────────────────────────────────────── */
+/* LAUNCHER SCREEN                                             */
+/* ──────────────────────────────────────────────────────────── */
+
+#launcher {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+  z-index: 100;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+#launcher.exit {
+  opacity: 0;
+  transform: scale(0.97);
+  pointer-events: none;
+}
+
+.launcher-card {
+  width: 380px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(139,125,240,0.05);
+  position: relative;
+}
+
+/* Door */
+.door-banner {
+  width: 100%;
+  height: 320px;
+  background: linear-gradient(to bottom, var(--door-top), var(--door-bottom));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: filter 0.2s;
+}
+.door-banner:hover { filter: brightness(1.08); }
+.door-banner:active { filter: brightness(0.95); }
+
+.door-crest {
+  width: 68px;
+  height: 84px;
+  background: var(--door-crest-bg);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 32%;
+  transform: translateY(-50%);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+}
+.door-crest-h {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 46px;
+  color: var(--door-crest-fg);
+  line-height: 1;
+  user-select: none;
+}
+.door-handle {
+  position: absolute;
+  right: 18px;
+  bottom: 72px;
+  width: 10px;
+  height: 22px;
+  background: var(--door-handle);
+  border-radius: 5px;
+}
+.door-enter-hint {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: rgba(233,216,255,0.4);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: pulse-hint 2.5s ease-in-out infinite;
+}
+@keyframes pulse-hint {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.9; }
+}
+
+/* Close button on door */
+.launcher-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  background: rgba(74, 45, 142, 0.7);
+  color: var(--door-crest-fg);
+  border-radius: 4px;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: background 0.15s;
+  line-height: 1;
+}
+.launcher-close:hover { background: rgba(107, 63, 184, 0.9); }
+
+/* Below-door area */
+.launcher-body {
+  padding: 20px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.launcher-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 24px;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.launcher-pills {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.pill-btn {
+  flex: 1;
+  height: 36px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+.pill-btn:hover { background: var(--pill-hover); border-color: var(--accent); color: var(--accent-soft-fg); }
+
+/* ──────────────────────────────────────────────────────────── */
+/* GALLERY SCREEN                                              */
+/* ──────────────────────────────────────────────────────────── */
+
+#gallery {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  transform: scale(1.02);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+#gallery.visible {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+/* ── Top bar ───────────────────────────────────────────────── */
+.topbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.topbar-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 17px;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.topbar-search {
+  flex: 0 0 200px;
+  height: 32px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.tag-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+  align-items: center;
+}
+
+.tag-filter-pill {
+  height: 28px;
+  padding: 0 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.tag-filter-pill:hover { background: var(--pill-hover); border-color: var(--accent); color: var(--accent-soft-fg); }
+.tag-filter-pill.active { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-soft-fg); font-weight: 600; }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.count-badge {
+  height: 26px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border-radius: 13px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+}
+.count-badge.newest { background: var(--accent); color: var(--accent-on); }
+
+.btn-upload {
+  height: 32px;
+  padding: 0 16px;
+  background: var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--accent-on);
+  font-weight: 700;
+  font-size: 13px;
+}
+.btn-upload:hover { background: var(--accent-hover); }
+
+.btn-close-gallery {
+  width: 26px;
+  height: 26px;
+  background: var(--door-top);
+  border-radius: 4px;
+  color: var(--door-crest-fg);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: background 0.15s;
+}
+.btn-close-gallery:hover { background: var(--door-bottom); }
+
+/* ── Grid area ─────────────────────────────────────────────── */
+.grid-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 18px;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 1100px) { .image-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 860px)  { .image-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.tile {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+  background: var(--bg-input);
+  aspect-ratio: 3/4;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.tile:hover { transform: scale(1.02); box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.tile.selected {
+  box-shadow: 0 0 0 2px var(--accent), 0 8px 24px rgba(139,125,240,0.25);
+  transform: scale(1.02);
+}
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.25s;
+}
+.tile img.loading { opacity: 0; }
+.tile-skeleton {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, var(--bg-input) 25%, var(--bg-input-hover) 50%, var(--bg-input) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.tile-tag-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  background: var(--accent);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(139,125,240,0.6);
+}
+
+.state-message {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-tertiary);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 18px;
+}
+
+/* ── Bottom dock ───────────────────────────────────────────── */
+.dock {
+  flex-shrink: 0;
+  height: 0;
+  overflow: hidden;
+  background: var(--bg-card-soft);
+  border-top: 1px solid transparent;
+  transition: height 0.2s ease, border-color 0.2s;
+}
+.dock.open {
+  height: 88px;
+  border-color: var(--border-subtle);
+}
+.dock-inner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 18px;
+  height: 88px;
+}
+.dock-thumb {
+  flex-shrink: 0;
+  width: 50px;
+  height: 64px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  background: var(--bg-input);
+}
+.dock-info {
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+}
+.dock-eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-quiet);
+  margin-bottom: 3px;
+}
+.dock-filename {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 17px;
+  color: var(--accent-soft-fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dock-tags {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--accent-soft-fg);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dock-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.action-btn {
+  height: 30px;
+  padding: 0 12px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.action-btn:hover { background: var(--bg-input-hover); border-color: var(--border-strong); color: var(--text-primary); }
+.action-btn.danger { border-color: rgba(217,112,112,0.3); color: var(--danger); }
+.action-btn.danger:hover { background: rgba(217,112,112,0.1); border-color: var(--danger); }
+
+/* Flash feedback */
+.action-btn.flash-ok { background: var(--accent-soft) !important; border-color: var(--accent) !important; color: var(--accent-soft-fg) !important; }
+
+/* ──────────────────────────────────────────────────────────── */
+/* MODALS                                                      */
+/* ──────────────────────────────────────────────────────────── */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  backdrop-filter: blur(4px);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.modal-overlay.open { opacity: 1; }
+
+.modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  width: 460px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+  transform: translateY(12px);
+  transition: transform 0.2s;
+}
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+.modal-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.field-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-quiet);
+  margin-bottom: 5px;
+}
+.field-group { margin-bottom: 16px; }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.btn-cancel {
+  height: 34px;
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-tertiary);
+}
+.btn-cancel:hover { background: var(--bg-input); }
+
+.btn-save {
+  height: 34px;
+  padding: 0 20px;
+  background: var(--accent);
+  border-radius: var(--radius-md);
+  color: var(--accent-on);
+  font-weight: 700;
+}
+.btn-save:hover { background: var(--accent-hover); }
+
+.btn-danger {
+  height: 34px;
+  padding: 0 20px;
+  background: var(--danger);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.btn-danger:hover { background: var(--danger-hover); }
+
+/* Tag picker grid */
+.tag-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.tag-picker-pill {
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tag-picker-pill:hover { background: var(--pill-hover); border-color: var(--accent); }
+.tag-picker-pill.selected { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-soft-fg); font-weight: 600; }
+
+/* Upload progress */
+.progress-bar-track {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-input);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 12px;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.2s;
+  width: 0%;
+}
+.progress-status {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+}
+
+/* Toast notifications */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  z-index: 300;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── File input trick ─────────────────────────────────────── */
+#file-input { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Hidden file input for uploads -->
+<input type="file" id="file-input" multiple accept="image/*">
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- LAUNCHER                                                  -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div id="launcher">
+  <div class="launcher-card">
+    <!-- Close -->
+    <button class="launcher-close" onclick="window.close()" title="Close">×</button>
+
+    <!-- Door -->
+    <div class="door-banner" id="door-enter" title="Enter the closet">
+      <div class="door-crest">
+        <span class="door-crest-h">H</span>
+      </div>
+      <div class="door-handle"></div>
+      <span class="door-enter-hint">click to enter</span>
+    </div>
+
+    <!-- Below door -->
+    <div class="launcher-body">
+      <span class="launcher-title serif">Holly's Closet</span>
+      <div class="launcher-pills">
+        <button class="pill-btn" onclick="openModal('codes')">Codes</button>
+        <button class="pill-btn" onclick="openModal('api')">API</button>
+        <button class="pill-btn" onclick="openModal('tags')">Tags</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- GALLERY                                                   -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<div id="gallery">
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-brand">
+      <span class="topbar-title serif">Holly's Closet</span>
+    </div>
+
+    <input type="text" class="topbar-search" id="search-input"
+           placeholder="Search…" oninput="onSearchChange()">
+
+    <div class="tag-filters" id="tag-filters">
+      <!-- Pills rendered by JS -->
+    </div>
+
+    <div class="topbar-right">
+      <button class="count-badge" id="count-badge" onclick="toggleSortOrder()" title="Toggle newest first">0</button>
+      <button class="btn-upload" onclick="triggerUpload()">Upload</button>
+      <button class="btn-close-gallery" onclick="closeGallery()" title="Back to launcher">×</button>
+    </div>
+  </div>
+
+  <!-- Image grid -->
+  <div class="grid-area" id="grid-area" onclick="onGridClick(event)">
+    <div class="state-message" id="grid-state">Loading images…</div>
+    <div class="image-grid" id="image-grid"></div>
+  </div>
+
+  <!-- Bottom dock -->
+  <div class="dock" id="dock">
+    <div class="dock-inner">
+      <img class="dock-thumb" id="dock-thumb" src="" alt="">
+      <div class="dock-info">
+        <div class="dock-eyebrow">Selected</div>
+        <div class="dock-filename" id="dock-filename"></div>
+        <div class="dock-tags" id="dock-tags"></div>
+      </div>
+      <div class="dock-actions">
+        <button class="action-btn" id="btn-link"       onclick="copyLink()">Link</button>
+        <button class="action-btn" id="btn-chatro"     onclick="copyChatro()">Chatro</button>
+        <button class="action-btn" id="btn-underground" onclick="copyUnderground()">Underground</button>
+        <button class="action-btn" id="btn-tag"        onclick="openTagPicker()">Tag</button>
+        <button class="action-btn" id="btn-rename"     onclick="openRename()">Rename</button>
+        <button class="action-btn danger" id="btn-delete" onclick="openDeleteConfirm()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- MODALS                                                    -->
+<!-- ══════════════════════════════════════════════════════════ -->
+
+<!-- Codes modal -->
+<div class="modal-overlay" id="modal-codes" onclick="overlayClick(event,'codes')">
+  <div class="modal">
+    <div class="modal-title serif">Snippet codes</div>
+    <div class="modal-hint">Templates used by the copy buttons. The image URL replaces SNIPPET.</div>
+    <div class="field-group">
+      <div class="field-label">Chatro</div>
+      <input type="text" id="codes-chatro" placeholder="[img]SNIPPET[/img]">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Underground</div>
+      <input type="text" id="codes-underground" placeholder='&lt;img src="SNIPPET"&gt;'>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('codes')">Cancel</button>
+      <button class="btn-save" onclick="saveCodes()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tags modal -->
+<div class="modal-overlay" id="modal-tags" onclick="overlayClick(event,'tags')">
+  <div class="modal">
+    <div class="modal-title serif">Tags</div>
+    <div class="modal-hint">Comma-separated. These appear as filters in the gallery.</div>
+    <div class="field-group">
+      <div class="field-label">Available tags</div>
+      <textarea id="tags-input" rows="5" style="resize:vertical;font-family:inherit;"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('tags')">Cancel</button>
+      <button class="btn-save" onclick="saveTags()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- API modal -->
+<div class="modal-overlay" id="modal-api" onclick="overlayClick(event,'api')">
+  <div class="modal">
+    <div class="modal-title serif">Cloudinary API</div>
+    <div class="modal-hint">Credentials are set as environment variables on Railway. View-only here.</div>
+    <div class="field-group">
+      <div class="field-label">Cloud name</div>
+      <input type="text" id="api-cloud" readonly style="opacity:0.6;cursor:default;">
+    </div>
+    <div class="field-group">
+      <div class="field-label">API key</div>
+      <input type="text" id="api-key" readonly style="opacity:0.6;cursor:default;">
+    </div>
+    <div class="field-group">
+      <div class="field-label">API secret</div>
+      <input type="password" id="api-secret" value="••••••••••••" readonly style="opacity:0.6;cursor:default;">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-save" onclick="closeModal('api')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tag picker modal -->
+<div class="modal-overlay" id="modal-tagpicker" onclick="overlayClick(event,'tagpicker')">
+  <div class="modal" style="width:420px;">
+    <div class="modal-title serif">Tag image</div>
+    <div class="modal-hint" id="tagpicker-hint">Select tags for this image.</div>
+    <div class="tag-picker-grid" id="tagpicker-grid"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" style="margin-right:auto;" onclick="clearAllTags()">Clear all</button>
+      <button class="btn-cancel" onclick="closeModal('tagpicker')">Cancel</button>
+      <button class="btn-save" onclick="saveTagsForImage()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename modal -->
+<div class="modal-overlay" id="modal-rename" onclick="overlayClick(event,'rename')">
+  <div class="modal" style="width:420px;">
+    <div class="modal-title serif">Rename image</div>
+    <div class="modal-hint">Renames the image on Cloudinary. This cannot be undone.</div>
+    <div class="field-group">
+      <div class="field-label">New name</div>
+      <input type="text" id="rename-input" onkeydown="if(event.key==='Enter')saveRename()">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('rename')">Cancel</button>
+      <button class="btn-save" onclick="saveRename()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="modal-delete" onclick="overlayClick(event,'delete')">
+  <div class="modal" style="width:400px;">
+    <div class="modal-title serif">Delete image</div>
+    <div class="modal-hint" id="delete-hint">This permanently removes the image from Cloudinary and cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('delete')">Cancel</button>
+      <button class="btn-danger" onclick="confirmDelete()">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload progress modal -->
+<div class="modal-overlay" id="modal-upload" style="pointer-events:none;">
+  <div class="modal" style="width:400px;">
+    <div class="modal-title serif">Uploading</div>
+    <div class="progress-status" id="upload-status">Starting…</div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="upload-bar"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════════ -->
+<!-- JAVASCRIPT                                                -->
+<!-- ══════════════════════════════════════════════════════════ -->
+<script>
+// ── State ─────────────────────────────────────────────────────
+let allImages      = [];       // full list from /api/images
+let visibleImages  = [];       // after filter + search
+let selectedIndex  = -1;
+let activeFilter   = "All";
+let searchQuery    = "";
+let sortNewest     = false;
+let settings       = { chatro_code: "", underground_code: "", available_tags: [] };
+let tagPickerSel   = new Set();  // selected tags in picker
+
+// ── Init ──────────────────────────────────────────────────────
+(async () => {
+  await loadSettings();
+  document.getElementById("door-enter").addEventListener("click", enterGallery);
+  document.addEventListener("keydown", e => { if (e.key === "Escape") handleEsc(); });
+  document.getElementById("file-input").addEventListener("change", onFilesChosen);
+})();
+
+// ── Settings ──────────────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const r = await fetch("/api/settings");
+    settings = await r.json();
+    document.getElementById("codes-chatro").value      = settings.chatro_code || "";
+    document.getElementById("codes-underground").value = settings.underground_code || "";
+    document.getElementById("tags-input").value        = (settings.available_tags || []).join(", ");
+    // API info — just placeholders (real values are env vars)
+    document.getElementById("api-cloud").value  = "[set in Railway env]";
+    document.getElementById("api-key").value    = "[set in Railway env]";
+  } catch(e) { console.error("Failed to load settings", e); }
+}
+
+async function saveCodes() {
+  settings.chatro_code    = document.getElementById("codes-chatro").value;
+  settings.underground_code = document.getElementById("codes-underground").value;
+  await fetch("/api/settings", { method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ chatro_code: settings.chatro_code, underground_code: settings.underground_code }) });
+  closeModal("codes");
+  toast("Codes saved");
+}
+
+async function saveTags() {
+  const raw = document.getElementById("tags-input").value;
+  const tags = raw.split(",").map(t=>t.trim()).filter(Boolean);
+  if (!tags.length) { toast("Add at least one tag"); return; }
+  settings.available_tags = tags;
+  await fetch("/api/settings", { method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({ available_tags: tags }) });
+  closeModal("tags");
+  renderFilterPills();
+  toast("Tags saved");
+}
+
+// ── Launcher → Gallery transition ─────────────────────────────
+async function enterGallery() {
+  const launcher = document.getElementById("launcher");
+  const gallery  = document.getElementById("gallery");
+  launcher.classList.add("exit");
+  gallery.classList.add("visible");
+  setGridState("Loading images…");
+  document.getElementById("image-grid").innerHTML = "";
+  renderFilterPills();
+  await fetchImages();
+  setTimeout(() => { launcher.style.display = "none"; }, 400);
+}
+
+function closeGallery() {
+  const launcher = document.getElementById("launcher");
+  const gallery  = document.getElementById("gallery");
+  launcher.style.display = "";
+  launcher.classList.remove("exit");
+  gallery.classList.remove("visible");
+  clearSelection();
+}
+
+// ── Images ─────────────────────────────────────────────────────
+async function fetchImages() {
+  try {
+    const r = await fetch("/api/images");
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    allImages = data.images || [];
+    applyFilterAndRender();
+  } catch(e) {
+    setGridState("Error loading images: " + e.message);
+  }
+}
+
+function applyFilterAndRender() {
+  let filtered = allImages.filter(img => {
+    const tags = img.tags || [];
+    if (activeFilter === "All") {
+      if (tags.includes("hidden")) return false;
+    } else if (activeFilter === "hidden") {
+      if (!tags.includes("hidden")) return false;
+    } else {
+      if (!tags.includes(activeFilter)) return false;
+    }
+    if (searchQuery && !img.public_id.toLowerCase().includes(searchQuery)) return false;
+    return true;
+  });
+
+  if (sortNewest) {
+    filtered = [...filtered].sort((a,b) => (b.created_at||"").localeCompare(a.created_at||""));
+  }
+
+  visibleImages = filtered;
+  selectedIndex = -1;
+  refreshDock();
+  refreshCount();
+  renderGrid();
+}
+
+function renderGrid() {
+  const grid = document.getElementById("image-grid");
+  if (!visibleImages.length) {
+    grid.innerHTML = "";
+    setGridState(searchQuery || activeFilter !== "All" ? "No images match your filter." : "No images yet. Upload some!");
+    return;
+  }
+  setGridState(null);
+
+  // Reuse existing tiles where possible to avoid flicker
+  const needed = visibleImages.length;
+  // Remove excess tiles
+  while (grid.children.length > needed) grid.removeChild(grid.lastChild);
+  // Add or update tiles
+  visibleImages.forEach((img, i) => {
+    let tile = grid.children[i];
+    const isNew = !tile;
+    if (isNew) {
+      tile = document.createElement("div");
+      tile.className = "tile";
+      tile.addEventListener("click", e => { e.stopPropagation(); selectTile(i); });
+      const skel = document.createElement("div");
+      skel.className = "tile-skeleton";
+      tile.appendChild(skel);
+      const image = document.createElement("img");
+      image.className = "loading";
+      image.alt = img.public_id;
+      tile.appendChild(image);
+      const dot = document.createElement("div");
+      dot.className = "tile-tag-dot";
+      dot.style.display = "none";
+      tile.appendChild(dot);
+      grid.appendChild(tile);
+    }
+
+    // Update selected state
+    tile.classList.toggle("selected", i === selectedIndex);
+
+    // Update image src if changed
+    const imgEl = tile.querySelector("img");
+    const skel  = tile.querySelector(".tile-skeleton");
+    const dot   = tile.querySelector(".tile-tag-dot");
+
+    if (imgEl.dataset.pid !== img.public_id) {
+      imgEl.dataset.pid = img.public_id;
+      imgEl.classList.add("loading");
+      if (skel) skel.style.display = "";
+      imgEl.src = img.secure_url;
+      imgEl.onload = () => {
+        imgEl.classList.remove("loading");
+        if (skel) skel.style.display = "none";
+      };
+      imgEl.onerror = () => {
+        imgEl.classList.remove("loading");
+        if (skel) skel.style.display = "none";
+      };
+    }
+
+    dot.style.display = (img.tags && img.tags.length) ? "" : "none";
+  });
+}
+
+function setGridState(msg) {
+  document.getElementById("grid-state").style.display = msg ? "" : "none";
+  document.getElementById("grid-state").textContent = msg || "";
+  document.getElementById("image-grid").style.display = msg ? "none" : "";
+}
+
+function onGridClick(e) {
+  if (e.target === document.getElementById("grid-area") ||
+      e.target === document.getElementById("image-grid")) {
+    clearSelection();
+  }
+}
+
+// ── Selection / Dock ──────────────────────────────────────────
+function selectTile(i) {
+  selectedIndex = (selectedIndex === i) ? -1 : i;
+  // Update tile highlight
+  document.querySelectorAll(".tile").forEach((t,idx) =>
+    t.classList.toggle("selected", idx === selectedIndex));
+  refreshDock();
+}
+
+function clearSelection() {
+  selectedIndex = -1;
+  document.querySelectorAll(".tile").forEach(t => t.classList.remove("selected"));
+  refreshDock();
+}
+
+function refreshDock() {
+  const dock = document.getElementById("dock");
+  if (selectedIndex < 0 || selectedIndex >= visibleImages.length) {
+    dock.classList.remove("open");
+    return;
+  }
+  dock.classList.add("open");
+  const img = visibleImages[selectedIndex];
+  document.getElementById("dock-filename").textContent = img.public_id;
+  const tags = img.tags || [];
+  document.getElementById("dock-tags").textContent =
+    tags.length ? tags.join(" · ") : "No tags";
+  // Thumb
+  const thumb = document.getElementById("dock-thumb");
+  if (thumb.dataset.pid !== img.public_id) {
+    thumb.dataset.pid = img.public_id;
+    thumb.src = img.secure_url;
+  }
+}
+
+// ── Filter pills ──────────────────────────────────────────────
+function renderFilterPills() {
+  const container = document.getElementById("tag-filters");
+  const tags = ["All", ...(settings.available_tags || []), "hidden"];
+  container.innerHTML = "";
+  tags.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.className = "tag-filter-pill" + (activeFilter === tag ? " active" : "");
+    btn.textContent = tag;
+    btn.addEventListener("click", () => setFilter(tag));
+    container.appendChild(btn);
+  });
+}
+
+function setFilter(tag) {
+  activeFilter = tag;
+  renderFilterPills();
+  applyFilterAndRender();
+}
+
+function onSearchChange() {
+  searchQuery = document.getElementById("search-input").value.trim().toLowerCase();
+  applyFilterAndRender();
+}
+
+// ── Sort / count ──────────────────────────────────────────────
+function toggleSortOrder() {
+  sortNewest = !sortNewest;
+  const badge = document.getElementById("count-badge");
+  badge.classList.toggle("newest", sortNewest);
+  applyFilterAndRender();
+}
+
+function refreshCount() {
+  document.getElementById("count-badge").textContent = visibleImages.length;
+}
+
+// ── Copy actions ──────────────────────────────────────────────
+function currentImage() {
+  return selectedIndex >= 0 ? visibleImages[selectedIndex] : null;
+}
+
+function copyToClipboard(text, btn) {
+  navigator.clipboard.writeText(text).then(() => {
+    if (btn) {
+      btn.classList.add("flash-ok");
+      setTimeout(() => btn.classList.remove("flash-ok"), 900);
+    }
+    toast("Copied!");
+  }).catch(() => toast("Copy failed"));
+}
+
+function copyLink() {
+  const img = currentImage(); if (!img) return;
+  copyToClipboard(img.secure_url, document.getElementById("btn-link"));
+}
+
+function copyChatro() {
+  const img = currentImage(); if (!img) return;
+  const code = (settings.chatro_code || "SNIPPET").replace(/SNIPPET/g, img.secure_url);
+  copyToClipboard(code, document.getElementById("btn-chatro"));
+}
+
+function copyUnderground() {
+  const img = currentImage(); if (!img) return;
+  const code = (settings.underground_code || "SNIPPET").replace(/SNIPPET/g, img.secure_url);
+  copyToClipboard(code, document.getElementById("btn-underground"));
+}
+
+// ── Tag picker ────────────────────────────────────────────────
+function openTagPicker() {
+  const img = currentImage(); if (!img) return;
+  tagPickerSel = new Set(img.tags || []);
+  document.getElementById("tagpicker-hint").textContent =
+    `Tags for: ${img.public_id}`;
+  renderTagPickerGrid();
+  openModal("tagpicker");
+}
+
+function renderTagPickerGrid() {
+  const grid = document.getElementById("tagpicker-grid");
+  grid.innerHTML = "";
+  (settings.available_tags || []).forEach(tag => {
+    const btn = document.createElement("button");
+    btn.className = "tag-picker-pill" + (tagPickerSel.has(tag) ? " selected" : "");
+    btn.textContent = tag;
+    btn.addEventListener("click", () => {
+      tagPickerSel.has(tag) ? tagPickerSel.delete(tag) : tagPickerSel.add(tag);
+      btn.classList.toggle("selected");
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function clearAllTags() {
+  tagPickerSel.clear();
+  renderTagPickerGrid();
+}
+
+async function saveTagsForImage() {
+  const img = currentImage(); if (!img) return;
+  const tags = [...tagPickerSel];
+  try {
+    const r = await fetch(`/api/images/${encodeURIComponent(img.public_id)}/tags`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ tags }),
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    img.tags = tags;
+    // Update tile dot
+    const tiles = document.querySelectorAll(".tile");
+    if (tiles[selectedIndex]) {
+      const dot = tiles[selectedIndex].querySelector(".tile-tag-dot");
+      if (dot) dot.style.display = tags.length ? "" : "none";
+    }
+    refreshDock();
+    closeModal("tagpicker");
+    toast("Tags saved");
+  } catch(e) { toast("Error: " + e.message); }
+}
+
+// ── Rename ────────────────────────────────────────────────────
+function openRename() {
+  const img = currentImage(); if (!img) return;
+  document.getElementById("rename-input").value = img.public_id;
+  openModal("rename");
+  setTimeout(() => {
+    const inp = document.getElementById("rename-input");
+    inp.focus(); inp.select();
+  }, 150);
+}
+
+async function saveRename() {
+  const img = currentImage(); if (!img) return;
+  const newId = document.getElementById("rename-input").value.trim();
+  if (!newId || newId === img.public_id) { closeModal("rename"); return; }
+  try {
+    const r = await fetch(`/api/images/${encodeURIComponent(img.public_id)}/rename`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ new_id: newId }),
+    });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    img.public_id  = data.public_id || newId;
+    img.secure_url = data.secure_url || img.secure_url;
+    // Re-sort
+    allImages = naturalSort(allImages);
+    applyFilterAndRender();
+    closeModal("rename");
+    toast("Renamed");
+  } catch(e) { toast("Error: " + e.message); }
+}
+
+function naturalSort(arr) {
+  const key = id => id.replace(/(\d+)/g, n => n.padStart(20, "0"));
+  const fav = arr.filter(r => (r.tags||[]).includes("Favorites"));
+  const par = arr.filter(r => (r.tags||[]).includes("Parties") && !(r.tags||[]).includes("Favorites"));
+  const oth = arr.filter(r => !(r.tags||[]).includes("Favorites") && !(r.tags||[]).includes("Parties"));
+  const s = a => a.sort((x,y) => key(x.public_id).localeCompare(key(y.public_id)));
+  return [...s(fav), ...s(oth), ...s(par)];
+}
+
+// ── Delete ────────────────────────────────────────────────────
+function openDeleteConfirm() {
+  const img = currentImage(); if (!img) return;
+  document.getElementById("delete-hint").textContent =
+    `Permanently delete "${img.public_id}" from Cloudinary? This cannot be undone.`;
+  openModal("delete");
+}
+
+async function confirmDelete() {
+  const img = currentImage(); if (!img) return;
+  closeModal("delete");
+  try {
+    const r = await fetch(`/api/images/${encodeURIComponent(img.public_id)}/delete`, { method:"POST" });
+    const data = await r.json();
+    if (data.error) throw new Error(data.error);
+    allImages = allImages.filter(x => x.public_id !== img.public_id);
+    clearSelection();
+    applyFilterAndRender();
+    toast("Deleted");
+  } catch(e) { toast("Error: " + e.message); }
+}
+
+// ── Upload ────────────────────────────────────────────────────
+function triggerUpload() {
+  document.getElementById("file-input").value = "";
+  document.getElementById("file-input").click();
+}
+
+async function onFilesChosen(e) {
+  const files = [...e.target.files];
+  if (!files.length) return;
+
+  const existingIds = new Set(allImages.map(x => x.public_id));
+  const toUpload = files.filter(f => {
+    const id = f.name.replace(/\.[^.]+$/, "");
+    return !existingIds.has(id);
+  });
+  const skipped = files.length - toUpload.length;
+
+  if (!toUpload.length) {
+    toast(`All ${skipped} file(s) already exist — nothing to upload`);
+    return;
+  }
+
+  // Show progress
+  document.getElementById("modal-upload").style.pointerEvents = "all";
+  openModal("upload");
+  let done = 0;
+
+  for (const file of toUpload) {
+    const publicId = file.name.replace(/\.[^.]+$/, "");
+    document.getElementById("upload-status").textContent =
+      `${done + 1}/${toUpload.length} · ${file.name}`;
+    document.getElementById("upload-bar").style.width =
+      ((done / toUpload.length) * 100) + "%";
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("public_id", publicId);
+      const r = await fetch("/api/images/upload", { method:"POST", body:fd });
+      const data = await r.json();
+      if (data.error) throw new Error(data.error);
+      allImages.push(data);
+      allImages = naturalSort(allImages);
+    } catch(err) {
+      console.error("Upload failed for", file.name, err);
+    }
+    done++;
+  }
+
+  document.getElementById("upload-bar").style.width = "100%";
+  document.getElementById("upload-status").textContent = "Done!";
+  setTimeout(() => {
+    closeModal("upload");
+    document.getElementById("modal-upload").style.pointerEvents = "none";
+    applyFilterAndRender();
+    let msg = `Uploaded ${done} image${done !== 1 ? "s" : ""}`;
+    if (skipped) msg += ` · skipped ${skipped} existing`;
+    toast(msg);
+  }, 500);
+}
+
+// ── Modal helpers ─────────────────────────────────────────────
+function openModal(name) {
+  document.getElementById(`modal-${name}`).classList.add("open");
+}
+function closeModal(name) {
+  document.getElementById(`modal-${name}`).classList.remove("open");
+}
+function overlayClick(e, name) {
+  if (e.target === document.getElementById(`modal-${name}`)) closeModal(name);
+}
+
+function handleEsc() {
+  const modals = ["codes","tags","api","tagpicker","rename","delete","upload"];
+  for (const m of modals) {
+    const el = document.getElementById(`modal-${m}`);
+    if (el && el.classList.contains("open")) { closeModal(m); return; }
+  }
+  clearSelection();
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2200);
+}
+</script>
+</body>
+</html>
